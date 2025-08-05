@@ -12,7 +12,6 @@ interface AuthContextType {
   login: (email: string, password: string, role?: 'parent' | 'provider') => Promise<void>;
   signUp: (email: string, password: string, userData: Partial<User>) => Promise<void>;
   signInWithPhone: (phone: string) => Promise<void>;
-  const navigate = useNavigate();
   verifyOtp: (phone: string, otp: string) => Promise<void>;
   setUserLocation: (location: User['location']) => void;
   logout: () => void;
@@ -32,6 +31,7 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);

@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { ProviderService } from '../services/providerService';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
@@ -31,7 +30,6 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -279,25 +277,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     
     // Force immediate profile loading and navigation
-    const user = data.user;
+    if (data.user) {
+      await loadUserProfile(data.user.id);
+    }
+  };
 
-    const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
-
-     if (profileError) throw profileError;
-
-      setUser(user);
-      setProfile(profile);
-    
-      if (!profile.onboarding_complete) {
-        navigate("/onboarding");
-      } else {
-        navigate("/dashboard");
-      }
-    };
   const signUp = async (email: string, password: string, userData: Partial<User>) => {
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -329,20 +313,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (error) throw error;
-    const user = data.user;
-
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
-
-  if (profileError) throw profileError;
-
-  setUser(user);
-  setProfile(profile);
-
-  navigate("/onboarding");
   };
 
   const verifyOtp = async (phone: string, otp: string) => {

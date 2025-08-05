@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { ProviderService } from '../services/providerService';
 import type { User as SupabaseUser } from '@supabase/supabase-js';

@@ -1,4 +1,4 @@
-# BrightRoots
+# BrightRoots - https://udaykumar-2025.github.io/BrightRoots/ // URL for Brightroots
 
 BrightRoots is an educational marketplace connecting parents with quality education providers for their children. Find the best tutors, music teachers, sports coaches, and activity centers in your area.
 

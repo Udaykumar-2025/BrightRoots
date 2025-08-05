@@ -12,6 +12,7 @@ interface AuthContextType {
   login: (email: string, password: string, role?: 'parent' | 'provider') => Promise<void>;
   signUp: (email: string, password: string, userData: Partial<User>) => Promise<void>;
   signInWithPhone: (phone: string) => Promise<void>;
+  const navigate = useNavigate();
   verifyOtp: (phone: string, otp: string) => Promise<void>;
   setUserLocation: (location: User['location']) => void;
   logout: () => void;
@@ -278,11 +279,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     
     // Force immediate profile loading and navigation
-    if (data.user) {
-      await loadUserProfile(data.user.id);
-    }
-  };
+    const user = data.user;
 
+    const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single();
+
+     if (profileError) throw profileError;
+
+      setUser(user);
+      setProfile(profile);
+    
+      if (!profile.onboarding_complete) {
+        navigate("/onboarding");
+      } else {
+        navigate("/dashboard");
+      }
+    };
   const signUp = async (email: string, password: string, userData: Partial<User>) => {
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -314,6 +329,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (error) throw error;
+    const user = data.user;
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single();
+
+  if (profileError) throw profileError;
+
+  setUser(user);
+  setProfile(profile);
+
+  navigate("/onboarding");
   };
 
   const verifyOtp = async (phone: string, otp: string) => {

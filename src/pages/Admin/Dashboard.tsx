@@ -247,9 +247,12 @@ export default function AdminDashboard() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('adminAuth');
-    localStorage.removeItem('adminUser');
-    navigate('/');
+    const confirmed = window.confirm('Are you sure you want to logout? This will end your current session.');
+    if (confirmed) {
+      localStorage.removeItem('adminAuth');
+      localStorage.removeItem('adminUser');
+      navigate('/');
+    }
   };
 
   const handleStatusChange = async (providerId: string, newStatus: 'approved' | 'rejected') => {

@@ -38,7 +38,7 @@ function getDistance(loc1, loc2) {
 }
 
 export default function Home() {
-  const { user, logout } = useAuth();
+  const { user, logoutWithConfirmation } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -48,18 +48,18 @@ export default function Home() {
   const [userLocation, setUserLocation] = useState(null);
   const [showAllProviders, setShowAllProviders] = useState(false);
 
-  // 🌍 Get Current Location or use user's saved location
+  // 🌍 Use location from AuthContext (set by LocationSetup)
   useEffect(() => {
-    console.log('🌍 Setting up location detection...');
+    console.log('🌍 Checking location from AuthContext...');
     
     if (user?.location?.coordinates) {
-      console.log('📍 Using saved user location:', user.location.coordinates);
+      console.log('📍 Using location from AuthContext:', user.location.coordinates);
       setUserLocation({
         latitude: user.location.coordinates.lat,
         longitude: user.location.coordinates.lng
       });
     } else {
-      console.log('🔍 Attempting to get current GPS location...');
+      console.log('📍 No location in AuthContext, attempting GPS...');
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           console.log('✅ GPS location captured:', pos.coords);
@@ -80,7 +80,7 @@ export default function Home() {
         }
       );
     }
-  }, [user]);
+  }, [user?.location]); // ← Changed dependency to user?.location
 
   useEffect(() => {
     if (userLocation) {
@@ -302,7 +302,7 @@ export default function Home() {
                 {user?.location ? 'Change' : 'Set Location'}
               </Button>
               <button
-                onClick={logout}
+                onClick={logoutWithConfirmation}
                 className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"
                 title="Logout"
               >

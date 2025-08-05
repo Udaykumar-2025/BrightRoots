@@ -3,6 +3,8 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { ProviderService } from '../services/providerService';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { User } from '../types';
+import { useConfirmDialog } from '../hooks/useConfirmDialog';
+import ConfirmDialog from '../components/UI/ConfirmDialog';
 
 interface AuthContextType {
   user: User | null;
@@ -12,6 +14,7 @@ interface AuthContextType {
   verifyOtp: (phone: string, otp: string) => Promise<void>;
   setUserLocation: (location: User['location']) => void;
   logout: () => void;
+  logoutWithConfirmation: () => void;
   isLoading: boolean;
   supabaseUser: SupabaseUser | null;
 }
@@ -30,6 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { dialogState, showConfirm, handleConfirm, handleCancel } = useConfirmDialog();
 
   useEffect(() => {
     // Check for demo user first
@@ -329,6 +333,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
+    
     // Clear demo user
     localStorage.removeItem('demoUser');
     localStorage.removeItem('adminAuth');
@@ -343,6 +348,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     window.location.href = '/';
   };
 
+  const logoutWithConfirmation = async () => {
+    const confirmed = await showConfirm({
+      title: 'Logout',
+      message: 'Are you sure you want to logout? This will end your current session.',
+      confirmText: 'Logout',
+      cancelText: 'Cancel',
+      type: 'warning'
+    });
+    
+    if (confirmed) {
+      logout();
+    }
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -353,9 +372,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       verifyOtp,
       setUserLocation, 
       logout, 
+      logoutWithConfirmation,
       isLoading 
     }}>
       {children}
+      <ConfirmDialog
+        isOpen={dialogState.isOpen}
+        title={dialogState.title}
+        message={dialogState.message}
+        confirmText={dialogState.confirmText}
+        cancelText={dialogState.cancelText}
+        type={dialogState.type}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
     </AuthContext.Provider>
   );
 }

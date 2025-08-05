@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { ProviderService } from '../services/providerService';
+import { useNavigate } from 'react-router-dom';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { User } from '../types';
 import { useConfirmDialog } from '../hooks/useConfirmDialog';
@@ -30,6 +31,7 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -279,6 +281,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Force immediate profile loading and navigation
     if (data.user) {
       await loadUserProfile(data.user.id);
+          if (role === 'provider') {
+        navigate('/provider/dashboard');
+      } else {
+        navigate('/dashboard');
+      }
     }
   };
 

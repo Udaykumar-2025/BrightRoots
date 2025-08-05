@@ -42,7 +42,7 @@ const serviceCategories = [
 const ageGroups = ['3-5 years', '6-8 years', '9-12 years', '13-16 years', '16+ years'];
 
 export default function ProviderDashboard() {
-  const { user, logout } = useAuth();
+  const { user, logoutWithConfirmation } = useAuth();
   const { provider, loading: providerLoading, updateProvider } = useProvider();
   const { classes, loading: classesLoading, createClass, updateClass, deleteClass } = useProviderClasses(provider?.id);
   const { showSuccess, showError } = useToast();
@@ -232,7 +232,7 @@ export default function ProviderDashboard() {
             </div>
             <div className="flex items-center space-x-4">
               <Button 
-                onClick={logout}
+                onClick={logoutWithConfirmation}
                 variant="outline"
                 className="flex items-center gap-2"
               >

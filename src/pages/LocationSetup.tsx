@@ -27,36 +27,106 @@ export default function LocationSetup() {
 
   const handleAutoDetect = () => {
     setIsDetecting(true);
+    console.log('🔍 Starting location detection...');
     
     if (navigator.geolocation) {
+      console.log('✅ Geolocation API is available');
+      
+      const options = {
+        enableHighAccuracy: true,
+        timeout: 15000, // Increased timeout to 15 seconds
+        maximumAge: 600000 // 10 minutes cache
+      };
+      
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          // Mock reverse geocoding
-          setTimeout(() => {
-            const mockLocation = {
+        async (position) => {
+          try {
+            console.log('📍 GPS Coordinates received:', position.coords);
+            console.log('📍 Latitude:', position.coords.latitude);
+            console.log('📍 Longitude:', position.coords.longitude);
+            
+            // Use reverse geocoding to get real city/area
+            const geocodingUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}&addressdetails=1`;
+            console.log('🌍 Fetching from:', geocodingUrl);
+            
+            const response = await fetch(geocodingUrl);
+            
+            if (response.ok) {
+              const data = await response.json();
+              console.log('🌍 Reverse geocoding result:', data);
+              
+              // Extract city and area from the response
+              const address = data.address;
+              const city = address.city || address.town || address.village || address.county || 'Gurgaon';
+              const area = address.suburb || address.neighbourhood || address.road || 'Current Location';
+              
+              const realLocation = {
+                city: city,
+                area: area,
+                coordinates: {
+                  lat: position.coords.latitude,
+                  lng: position.coords.longitude
+                }
+              };
+              
+              console.log('✅ Real location detected:', realLocation);
+              setUserLocation(realLocation);
+              setIsDetecting(false);
+              navigate('/home');
+            } else {
+              throw new Error(`Reverse geocoding failed with status: ${response.status}`);
+            }
+          } catch (error) {
+            console.warn('❌ Reverse geocoding failed, using GPS coordinates only:', error);
+            
+            // Fallback: use GPS coordinates with Gurgaon as default
+            const fallbackLocation = {
               city: 'Gurgaon',
-              area: 'Sector 15',
+              area: 'Current Location',
               coordinates: {
                 lat: position.coords.latitude,
                 lng: position.coords.longitude
               }
             };
             
-            setUserLocation(mockLocation);
+            console.log('✅ Using fallback location:', fallbackLocation);
+            setUserLocation(fallbackLocation);
             setIsDetecting(false);
             navigate('/home');
-          }, 2000);
+          }
         },
         (error) => {
+          console.error('❌ GPS Error:', error);
+          console.error('❌ Error code:', error.code);
+          console.error('❌ Error message:', error.message);
+          
+          let errorMessage = 'Unable to detect location. ';
+          
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage += 'Location permission denied. Please allow location access and try again.';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage += 'Location information unavailable. Please try again.';
+              break;
+            case error.TIMEOUT:
+              errorMessage += 'Location request timed out. Please try again.';
+              break;
+            default:
+              errorMessage += 'Please select manually.';
+          }
+          
           setIsDetecting(false);
           setMethod('manual');
-          alert('Unable to detect location. Please select manually.');
-        }
+          alert(errorMessage);
+        },
+        options
       );
     } else {
+      console.error('❌ Geolocation API not supported');
       setIsDetecting(false);
       setMethod('manual');
-      alert('Geolocation is not supported. Please select manually.');
+      alert('Geolocation is not supported in this browser. Please select manually.');
     }
   };
 

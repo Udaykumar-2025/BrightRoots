@@ -15,14 +15,41 @@ if (!supabaseServiceKey) {
   console.error('❌ Missing VITE_SUPABASE_SERVICE_ROLE_KEY environment variable. Admin operations will not work.');
 }
 
+// Create a mock client for development when env vars are missing
+const createMockClient = () => ({
+  auth: {
+    getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+    getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+    signInWithPassword: () => Promise.resolve({ data: { user: null }, error: { message: 'Supabase not configured' } }),
+    signUp: () => Promise.resolve({ data: { user: null }, error: { message: 'Supabase not configured' } }),
+    signOut: () => Promise.resolve({ error: null }),
+    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } })
+  },
+  from: () => ({
+    select: () => ({ eq: () => ({ single: () => Promise.resolve({ data: null, error: null }) }) }),
+    insert: () => ({ select: () => ({ single: () => Promise.resolve({ data: null, error: null }) }) }),
+    update: () => ({ eq: () => ({ select: () => ({ single: () => Promise.resolve({ data: null, error: null }) }) }) })
+  }),
+  storage: {
+    from: () => ({
+      upload: () => Promise.resolve({ data: null, error: { message: 'Supabase not configured' } }),
+      getPublicUrl: () => ({ data: { publicUrl: '' } }),
+      remove: () => Promise.resolve({ error: null })
+    })
+  }
+}) as any;
+
 export const supabase = supabaseUrl && supabaseAnonKey 
   ? createClient<Database>(supabaseUrl, supabaseAnonKey)
-  : null as any; // This will cause errors but won't crash the app immediately
+  : createMockClient();
 
 // Admin client with service role key to bypass RLS
 export const supabaseAdmin = supabaseUrl && supabaseServiceKey 
   ? createClient<Database>(supabaseUrl, supabaseServiceKey)
-  : null as any; // This will cause errors but won't crash the app immediately
+  : createMockClient();
+
+// Helper to check if Supabase is properly configured
+export const isSupabaseConfigured = !!(supabaseUrl && supabaseAnonKey);
 
 // Helper functions for common operations
 export const uploadFile = async (

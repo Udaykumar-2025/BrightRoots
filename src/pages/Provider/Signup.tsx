@@ -1,97 +1,91 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Users, Mail, Lock, User, ArrowRight } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../lib/supabase';
-import { useToast } from '../../hooks/useToast';
-import Button from '../../components/UI/Button';
-import Card from '../../components/UI/Card';
+import React, { useEffect, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
+import { ArrowRight, Users, Lock, User } from "lucide-react";
+import Button from "../../components/UI/Button";
+import Card from "../../components/UI/Card";
 
 export default function ProviderSignup() {
-  const { user } = useAuth();
+  const { user, signUp, resendVerificationEmail } = useAuth();
   const navigate = useNavigate();
-  const { showSuccess, showError } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: ''
+    name: "",
+    email: "",
+    password: "",
   });
+  const [showResendEmail, setShowResendEmail] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState("");
 
-  // Redirect if already logged in as provider
   useEffect(() => {
-    if (user?.role === 'provider') {
-      navigate('/provider/dashboard');
+    if (user?.role === "provider") {
+      navigate("/provider/dashboard");
     }
   }, [user, navigate]);
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validation
+
     if (!formData.name || !formData.email || !formData.password) {
-      showError('Missing Information', 'Please fill all fields');
+      alert("Please fill all fields");
       return;
     }
 
     if (formData.password.length < 6) {
-      showError('Invalid Password', 'Password must be at least 6 characters long');
+      alert("Password must be at least 6 characters long");
       return;
     }
 
     setIsLoading(true);
 
     try {
-      console.log('🚀 Starting provider signup process...');
-
-      // 1. Create user in Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            name: formData.name,
-            role: 'provider'
-          }
-        }
+      const { error } = await signUp(formData.email, formData.password, {
+        name: formData.name,
+        role: "provider",
       });
 
-      if (authError) {
-        throw new Error(`Signup failed: ${authError.message}`);
+      if (error) {
+        throw error;
       }
 
-      if (!authData.user) {
-        throw new Error('User creation failed');
-      }
-
-      console.log('✅ Auth user created:', authData.user.id);
-
-
-      showSuccess('Account Created', 'Please check your email to verify your account, then you can login.');
-      
-      // Clear form data
-      setFormData({
-        name: '',
-        email: '',
-        password: ''
-      });
-      
-      navigate('/provider/login');
-
+      alert(
+        "Account created! Please check your email for a verification link before logging in."
+      );
+      setPendingEmail(formData.email);
+      setShowResendEmail(true);
+      setFormData({ name: "", email: "", password: "" });
+      navigate("/provider/login");
     } catch (error: any) {
-      console.error('❌ Provider signup error:', error);
-      
-      if (error.message.includes('User already registered')) {
-        showError('Account Already Exists', 'An account with this email already exists. Please use the login option instead.');
-      } else if (error.message.includes('Invalid email')) {
-        showError('Invalid Email', 'Please enter a valid email address.');
+      console.error("Provider signup error:", error);
+
+      if (
+        error.message?.includes("User already registered") ||
+        error.message?.includes("already exists")
+      ) {
+        alert("An account with this email already exists. Please login.");
+      } else if (error.message?.includes("Invalid email")) {
+        alert("Please enter a valid email address.");
       } else {
-        showError('Signup Failed', error.message || 'Account creation failed. Please try again.');
+        alert(
+          error.message || "Signup Failed. Account creation failed. Please try again."
+        );
       }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setIsLoading(true);
+    try {
+      await resendVerificationEmail(pendingEmail);
+      alert("Verification email resent! Please check your inbox.");
+    } catch (error: any) {
+      alert("Failed to resend verification email. Try again later.");
     } finally {
       setIsLoading(false);
     }
@@ -100,7 +94,6 @@ export default function ProviderSignup() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
-        {/* Logo and Welcome */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl mb-6">
             <Users className="w-10 h-10 text-white" />
@@ -113,7 +106,6 @@ export default function ProviderSignup() {
 
         <Card className="p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Name Field */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Full Name *
@@ -123,7 +115,7 @@ export default function ProviderSignup() {
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
                   placeholder="Enter your full name"
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   required
@@ -131,25 +123,23 @@ export default function ProviderSignup() {
               </div>
             </div>
 
-            {/* Email Field */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Email Address *
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="email"
                   value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  placeholder="Enter your email"
+                  onChange={(e) => handleInputChange("email", e.target.value)}
+                  placeholder="Enter your email address"
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   required
                 />
               </div>
             </div>
 
-            {/* Password Field */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Password *
@@ -159,7 +149,7 @@ export default function ProviderSignup() {
                 <input
                   type="password"
                   value={formData.password}
-                  onChange={(e) => handleInputChange('password', e.target.value)}
+                  onChange={(e) => handleInputChange("password", e.target.value)}
                   placeholder="Create a password"
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   required
@@ -171,24 +161,41 @@ export default function ProviderSignup() {
               </p>
             </div>
 
-
-            <Button 
-              type="submit" 
-              size="lg" 
+            <Button
+              type="submit"
+              size="lg"
               className="w-full group"
               disabled={isLoading}
             >
               <span>
-                {isLoading ? 'Creating Account...' : 'Create Provider Account'}
+                {isLoading ? "Creating Account..." : "Create Provider Account"}
               </span>
-              {!isLoading && <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />}
+              {!isLoading && (
+                <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              )}
             </Button>
           </form>
 
+          {showResendEmail && (
+            <div className="mt-6 text-center">
+              <Button
+                onClick={handleResendVerification}
+                disabled={isLoading}
+                variant="outline"
+                size="sm"
+              >
+                Resend Verification Email
+              </Button>
+            </div>
+          )}
+
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Already have an account?{' '}
-              <Link to="/provider/login" className="text-blue-600 hover:text-blue-700 font-medium">
+              Already have an account?{" "}
+              <Link
+                to="/provider/login"
+                className="text-blue-600 hover:text-blue-700 font-medium"
+              >
                 Login here
               </Link>
             </p>

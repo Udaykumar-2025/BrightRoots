@@ -71,7 +71,7 @@ export default function Login() {
       
       showSuccess('Login Successful', 'Welcome to BrightRoots! Redirecting to home...');
       setTimeout(() => {
-        window.location.href = '/home';
+        window.location.href = '/provider/home';
       }, 1000);
       return;
     }

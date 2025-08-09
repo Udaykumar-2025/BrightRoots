@@ -21,13 +21,50 @@ export default function ProviderDetails() {
   const [selectedChild, setSelectedChild] = useState('');
   const [interestedClass, setInterestedClass] = useState('');
   const [message, setMessage] = useState('');
+  const [provider, setProvider] = useState<any>(null);
+  const [reviews, setReviews] = useState<any[]>([]);
 
-  const { providers: actualProviders } = useProviders(); // your live providers
-  const allProviders = [...mockProviders, ...actualProviders];
+  useEffect(() => {
+    // 1️⃣ First, check if provider was passed via route state
+    if (location.state?.provider) {
+      setProvider(location.state.provider);
+      return;
+    }
 
-  const provider = allProviders.find(p => String(p.id) === String(id));
-  const reviews = mockReviews.filter(r => String(r.provider) === String(id));
+    // 2️⃣ Next, check mock providers
+    const mockProvider = mockProviders.find(p => String(p.id) === String(id));
+    if (mockProvider) {
+      setProvider(mockProvider);
+      setReviews(mockReviews.filter(r => String(r.provider) === String(id)));
+      return;
+    }
 
+    // 3️⃣ Finally, fetch from Supabase
+    const fetchProvider = async () => {
+      const { data, error } = await supabase
+        .from('providers')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        console.error(error);
+        showError('Failed to load provider details.');
+        return;
+      }
+      setProvider(data);
+
+      // Fetch reviews from Supabase if needed
+      const { data: reviewData, error: reviewError } = await supabase
+        .from('reviews')
+        .select('*')
+        .eq('provider', id);
+
+      if (!reviewError) setReviews(reviewData);
+    };
+
+    fetchProvider();
+  }, [id, location.state, showError]);
 
   if (!provider) {
     return (

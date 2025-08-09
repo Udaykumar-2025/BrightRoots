@@ -10,6 +10,7 @@ import { useAuth } from '../contexts/AuthContext';
 import Card from '../components/UI/Card';
 import Button from '../components/UI/Button';
 import StarRating from '../components/UI/StarRating';
+import { ProviderService } from '../services/providerService';
 
 export default function ProviderDetails() {
   const { id } = useParams<{ id: string }>();
@@ -21,8 +22,12 @@ export default function ProviderDetails() {
   const [interestedClass, setInterestedClass] = useState('');
   const [message, setMessage] = useState('');
 
-  const provider = mockProviders.find(p => p.id === id);
-  const reviews = mockReviews.filter(r => r.provider === id);
+  const { providers: actualProviders } = useProviders(); // your live providers
+  const allProviders = [...mockProviders, ...actualProviders];
+
+  const provider = allProviders.find(p => String(p.id) === String(id));
+  const reviews = mockReviews.filter(r => String(r.provider) === String(id));
+
 
   if (!provider) {
     return (

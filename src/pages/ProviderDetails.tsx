@@ -54,7 +54,7 @@ export default function ProviderDetails() {
         return;
       }
       setProvider(data);
-
+    };
   if (!provider) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">

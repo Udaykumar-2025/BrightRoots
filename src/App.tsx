@@ -129,6 +129,8 @@ function AppContent() {
         <Route path="/provider/login" element={!user ? <ProviderLogin /> : <Navigate to="/provider/dashboard" />} />
         <Route path="/provider/signup" element={!user ? <ProviderSignup /> : <Navigate to="/provider/dashboard" />} />
         <Route path="/provider/dashboard" element={<ProviderDashboard />} />
+        <Route path="/provider/:id" element={<ProviderDetails />} />
+
         
         {/* Admin Routes */}
         <Route path="/admin/login" element={<AdminLogin />} />

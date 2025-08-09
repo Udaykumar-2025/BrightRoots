@@ -11,6 +11,7 @@ import Card from '../components/UI/Card';
 import Button from '../components/UI/Button';
 import StarRating from '../components/UI/StarRating';
 import { ProviderService } from '../services/providerService';
+import { supabase } from '../lib/supabase';
 
 export default function ProviderDetails() {
   const { id } = useParams<{ id: string }>();

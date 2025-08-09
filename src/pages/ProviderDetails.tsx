@@ -55,18 +55,6 @@ export default function ProviderDetails() {
       }
       setProvider(data);
 
-      // Fetch reviews from Supabase if needed
-      const { data: reviewData, error: reviewError } = await supabase
-        .from('reviews')
-        .select('*')
-        .eq('provider', id);
-
-      if (!reviewError) setReviews(reviewData);
-    };
-
-    fetchProvider();
-  }, [id, location.state, showError]);
-
   if (!provider) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">

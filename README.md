@@ -23,3 +23,4 @@ BrightRoots is an educational marketplace connecting parents with quality educat
 - Supabase (Database & Auth)
 - Vite (Build tool)
 - React Router (Navigation)
+

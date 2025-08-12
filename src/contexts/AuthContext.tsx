@@ -344,8 +344,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await supabase.auth.signOut();
     }
     
-    // Redirect to main login page
-    window.location.href = '/';
+    // Redirect to main login page for HashRouter (GitHub Pages)
+    window.location.hash = '#/';
   };
 
   const logoutWithConfirmation = async () => {

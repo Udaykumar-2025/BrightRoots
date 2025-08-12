@@ -251,7 +251,7 @@ export default function AdminDashboard() {
     if (confirmed) {
       localStorage.removeItem('adminAuth');
       localStorage.removeItem('adminUser');
-      navigate('/');
+      window.location.hash = '#/';
     }
   };
 

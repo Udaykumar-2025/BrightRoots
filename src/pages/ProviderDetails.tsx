@@ -21,7 +21,7 @@ export default function ProviderDetails() {
   const [interestedClass, setInterestedClass] = useState('');
   const [message, setMessage] = useState('');
 
-  const provider = mockProviders.find(p => p.id === id);
+  const provider = mockProviders.find(p => String(p.id) === String(id));
   const reviews = mockReviews.filter(r => r.provider === id);
 
   if (!provider) {

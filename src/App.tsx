@@ -85,21 +85,21 @@ function AppContent() {
       // Redirect providers to dashboard if they're on login page
       if (user.role === 'provider' && currentPath === '/provider/login') {
         console.log('🔄 Redirecting provider from login to dashboard');
-        window.location.href = '/provider/dashboard';
+        window.location.hash = '#/provider/dashboard';
         return;
       }
       
       // Redirect parents to location setup if they don't have location
       if (user.role === 'parent' && !user.location && (currentPath === '/' || currentPath === '/login')) {
         console.log('🔄 Redirecting parent to location setup');
-        window.location.href = '/location';
+        window.location.hash = '#/location';
         return;
       }
       
       // Redirect parents to home if they have location and are on root
       if (user.role === 'parent' && user.location && (currentPath === '/' || currentPath === '/login')) {
         console.log('🔄 Redirecting parent to home');
-        window.location.href = '/home';
+        window.location.hash = '#/home';
         return;
       }
     }
